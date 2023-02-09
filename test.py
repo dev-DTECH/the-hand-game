@@ -5,6 +5,9 @@ import csv
 import copy
 import argparse
 import itertools
+import tensorflow as tf
+model=tf.keras.models.load_model("models/v1.h5")
+classes=['Nope',"Fuck Off"]
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -126,12 +129,9 @@ with mp_hands.Hands(
             for hand_landmarks in results.multi_hand_landmarks:
                 landmark = preprocess_landmark(calc_landmark_list(debug_image,hand_landmarks))
                 landmark = np.array(landmark)
-
-                for k in range(ord('0'), ord('9')):
-                    if 48 <= key <= 57:
-                        update_csv(key-48,landmark)
-                        break
-
+                if(len(landmark)):
+                    prediction= model.predict(np.array([landmark], dtype=np.float32))
+                    print(classes[int(prediction>0.5)])
                 # print(landmark, landmark.shape)
 
 
