@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -8,7 +10,7 @@ import itertools
 import tensorflow as tf
 model=tf.keras.models.load_model("models/v1.h5")
 classes=['Nope',"Fuck Off"]
-
+TF_CPP_MIN_LOG_LEVEL="2"
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
@@ -105,6 +107,8 @@ with mp_hands.Hands(
         model_complexity=0,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5) as hands:
+    prev_frame_time = 0
+    font = cv2.FONT_HERSHEY_SIMPLEX
     while cap.isOpened():
         success, image = cap.read()
         if not success:
@@ -146,7 +150,27 @@ with mp_hands.Hands(
                     mp_drawing_styles.get_default_hand_landmarks_style(),
                     mp_drawing_styles.get_default_hand_connections_style())
         # Flip the image horizontally for a selfie-view display.
-        cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+        new_frame_time = time.time()
+
+        # Calculating the fps
+
+        # fps will be number of frame processed in given time frame
+        # since their will be most of time error of 0.001 second
+        # we will be subtracting it to get more accurate result
+        fps = 1 / (new_frame_time - prev_frame_time)
+        prev_frame_time = new_frame_time
+
+        # converting the fps into integer
+        fps = int(fps)
+
+        # converting the fps to string so that we can display it on frame
+        # by using putText function
+        fps = str(fps)
+
+        # putting the FPS count on the frame
+        cv2.putText(image, fps, (7, 70), font, 3, (100, 255, 0), 3, cv2.LINE_AA)
+        cv2.imshow('MediaPipe Hands', image)
+
         # if cv2.waitKey(5) & 0xFF == 27:
         #     break
 cap.release()
